@@ -20,6 +20,7 @@
  */
 package com.serotonin.modbus4j.serial.rtu;
 
+import com.serotonin.modbus4j.ModbusConfig;
 import com.serotonin.modbus4j.base.ModbusUtils;
 import com.serotonin.modbus4j.exception.ModbusTransportException;
 import com.serotonin.modbus4j.msg.ModbusResponse;
@@ -33,22 +34,25 @@ import com.serotonin.modbus4j.sero.util.queue.ByteQueue;
  * @author mlohbihler
  */
 public class RtuMessageResponse extends RtuMessage implements OutgoingResponseMessage, IncomingResponseMessage {
-    static RtuMessageResponse createRtuMessageResponse(ByteQueue queue) throws ModbusTransportException {
-        ModbusResponse response = ModbusResponse.createModbusResponse(queue);
-        RtuMessageResponse rtuResponse = new RtuMessageResponse(response);
+	static RtuMessageResponse createRtuMessageResponse(ByteQueue queue) throws ModbusTransportException {
+		ModbusResponse response = ModbusResponse.createModbusResponse(queue);
+		RtuMessageResponse rtuResponse = new RtuMessageResponse(response);
 
-        // Check the CRC
-        ModbusUtils.checkCRC(rtuResponse.modbusMessage, queue);
+		// 如果启用了CRC校验，才做检查
+		if (ModbusConfig.isEnableRtuCrc()) {
+			// Check the CRC
+			ModbusUtils.checkCRC(rtuResponse.modbusMessage, queue);
+		}
 
-        // Return the data.
-        return rtuResponse;
-    }
+		// Return the data.
+		return rtuResponse;
+	}
 
-    public RtuMessageResponse(ModbusResponse modbusResponse) {
-        super(modbusResponse);
-    }
+	public RtuMessageResponse(ModbusResponse modbusResponse) {
+		super(modbusResponse);
+	}
 
-    public ModbusResponse getModbusResponse() {
-        return (ModbusResponse) modbusMessage;
-    }
+	public ModbusResponse getModbusResponse() {
+		return (ModbusResponse) modbusMessage;
+	}
 }

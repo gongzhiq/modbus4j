@@ -20,6 +20,7 @@
  */
 package com.serotonin.modbus4j.serial.rtu;
 
+import com.serotonin.modbus4j.ModbusConfig;
 import com.serotonin.modbus4j.base.ModbusUtils;
 import com.serotonin.modbus4j.msg.ModbusMessage;
 import com.serotonin.modbus4j.serial.SerialMessage;
@@ -31,20 +32,23 @@ import com.serotonin.modbus4j.sero.util.queue.ByteQueue;
  * @author mlohbihler
  */
 public class RtuMessage extends SerialMessage {
-    public RtuMessage(ModbusMessage modbusMessage) {
-        super(modbusMessage);
-    }
+	public RtuMessage(ModbusMessage modbusMessage) {
+		super(modbusMessage);
+	}
 
-    public byte[] getMessageData() {
-        ByteQueue queue = new ByteQueue();
+	public byte[] getMessageData() {
+		ByteQueue queue = new ByteQueue();
 
-        // Write the particular message.
-        modbusMessage.write(queue);
+		// Write the particular message.
+		modbusMessage.write(queue);
 
-        // Write the CRC
-        ModbusUtils.pushShort(queue, ModbusUtils.calculateCRC(modbusMessage));
+		// 如果启用的CRC校验,才拼crc数据
+		if (ModbusConfig.isEnableRtuCrc()) {
+			// Write the CRC
+			ModbusUtils.pushShort(queue, ModbusUtils.calculateCRC(modbusMessage));
+		}
 
-        // Return the data.
-        return queue.popAll();
-    }
+		// Return the data.
+		return queue.popAll();
+	}
 }
