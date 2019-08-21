@@ -10,7 +10,7 @@ modbus4j
 	}
 	
 	dependencies {
-	        implementation 'com.github.licheedev:modbus4j:v3.0.5-alpha1'
+	        implementation 'com.github.licheedev:modbus4j:v3.0.6-alpha1'
 	}
 
 ```
@@ -19,6 +19,8 @@ modbus4j
 ```
 // 禁用串口CRC校验
 ModbusConfig.setEnableRtuCrc(false);
+// 设置是否显示收发日志
+ModbusConfig.setEnableDataLog(true,true);
 ```
 
 

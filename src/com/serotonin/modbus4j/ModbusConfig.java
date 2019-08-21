@@ -33,7 +33,7 @@ public class ModbusConfig {
 	 * @param enableSendLog 是否显示发送的数据日志
 	 * @param eanbleRecvLog 是否显示接收的数据日志
 	 */
-	public static void setEnableLog(boolean enableSendLog, boolean eanbleRecvLog) {
+	public static void setEnableDataLog(boolean enableSendLog, boolean eanbleRecvLog) {
 		sShowSendLog = enableSendLog;
 		sShowRecvLog = eanbleRecvLog;
 	}
