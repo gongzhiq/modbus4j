@@ -49,6 +49,12 @@ import com.serotonin.modbus4j.sero.messaging.StreamTransport;
 import com.serotonin.modbus4j.sero.messaging.Transport;
 import com.serotonin.modbus4j.sero.messaging.WaitingRoomKeyFactory;
 
+/**
+ * <p>TcpMaster class.</p>
+ *
+ * @author Matthew Lohbihler
+ * @version 5.0.0
+ */
 public class TcpMaster extends ModbusMaster {
     private static final int RETRY_PAUSE_START = 50;
     private static final int RETRY_PAUSE_MAX = 1000;
@@ -65,25 +71,65 @@ public class TcpMaster extends ModbusMaster {
     private Transport transport;
     private MessageControl conn;
 
-    public TcpMaster(IpParameters params, boolean keepAlive, boolean autoIncrementTransactionId) {
+    /**
+     * <p>Constructor for TcpMaster.</p>
+     * 
+     * @param params
+     * @param keepAlive
+     * @param autoIncrementTransactionId
+     * @param validateResponse - confirm that requested slave id is the same in the response
+     */
+    public TcpMaster(IpParameters params, boolean keepAlive, boolean autoIncrementTransactionId, boolean validateResponse) {
         this.ipParameters = params;
         this.keepAlive = keepAlive;
         this.autoIncrementTransactionId = autoIncrementTransactionId;
     }
     
+    /**
+     * <p>Constructor for TcpMaster.</p>
+     * Default to not validating the slave id in responses
+     * 
+     * @param params a {@link com.serotonin.modbus4j.ip.IpParameters} object.
+     * @param keepAlive a boolean.
+     * @param autoIncrementTransactionId a boolean.
+     */
+    public TcpMaster(IpParameters params, boolean keepAlive, boolean autoIncrementTransactionId) {
+        this(params, keepAlive, autoIncrementTransactionId, false);
+    }
     
+    
+    /**
+     * <p>Constructor for TcpMaster.</p>
+     * 
+     * Default to auto increment transaction id
+     * Default to not validating the slave id in responses
+     *
+     * @param params a {@link com.serotonin.modbus4j.ip.IpParameters} object.
+     * @param keepAlive a boolean.
+     */
     public TcpMaster(IpParameters params, boolean keepAlive) {
-        this(params, keepAlive, true);
+        this(params, keepAlive, true, false);
     }
 
+    /**
+     * <p>Setter for the field <code>nextTransactionId</code>.</p>
+     *
+     * @param id a short.
+     */
     public void setNextTransactionId(short id) {
         this.nextTransactionId = id;
     }
     
+    /**
+     * <p>Getter for the field <code>nextTransactionId</code>.</p>
+     *
+     * @return a short.
+     */
     protected short getNextTransactionId() {
         return nextTransactionId;
     }
 
+    /** {@inheritDoc} */
     @Override
     synchronized public void init() throws ModbusInitException {
         try {
@@ -96,12 +142,14 @@ public class TcpMaster extends ModbusMaster {
         initialized = true;
     }
 
+    /** {@inheritDoc} */
     @Override
     synchronized public void destroy() {
         closeConnection();
         initialized = false;
     }
 
+    /** {@inheritDoc} */
     @Override
     synchronized public ModbusResponse sendImpl(ModbusRequest request) throws ModbusTransportException {
         try {

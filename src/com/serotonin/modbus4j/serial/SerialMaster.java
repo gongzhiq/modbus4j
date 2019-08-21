@@ -29,28 +29,45 @@ import com.serotonin.modbus4j.sero.messaging.EpollStreamTransport;
 import com.serotonin.modbus4j.sero.messaging.StreamTransport;
 import com.serotonin.modbus4j.sero.messaging.Transport;
 
+/**
+ * <p>Abstract SerialMaster class.</p>
+ *
+ * @author Matthew Lohbihler
+ * @version 5.0.0
+ */
 abstract public class SerialMaster extends ModbusMaster {
 	
 	
 	private final Log LOG = LogFactory.getLog(SerialMaster.class);
-	//These options are no longer supported as they were originally a hack that didn't work right anyway
-	@Deprecated
-    public static final int SYNC_TRANSPORT = 1;
-	@Deprecated
-    public static final int SYNC_SLAVE = 2;
-	@Deprecated
-    public static final int SYNC_FUNCTION = 3;
-    
-    // Runtime fields.
+
+	// Runtime fields.
     protected SerialPortWrapper wrapper;
     protected Transport transport;
 
     
     
+    /**
+     * <p>Constructor for SerialMaster.</p>
+     * 
+     * Default to validating the slave id in responses
+     *
+     * @param wrapper a {@link com.serotonin.modbus4j.serial.SerialPortWrapper} object.
+     */
     public SerialMaster(SerialPortWrapper wrapper) {
+        this(wrapper, true);
+    }
+    
+    /**
+     * <p>Constructor for SerialMaster.</p>
+     * @param wrapper a {@link com.serotonin.modbus4j.serial.SerialPortWrapper} object.
+     * @param validateResponse - confirm that requested slave id is the same in the response
+     */
+    public SerialMaster(SerialPortWrapper wrapper, boolean validateResponse) {
         this.wrapper = wrapper;
+        this.validateResponse = validateResponse;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void init() throws ModbusInitException {
         try {
@@ -68,6 +85,9 @@ abstract public class SerialMaster extends ModbusMaster {
         }
     }
 
+    /**
+     * <p>close.</p>
+     */
     public void close() {
         try {
 			wrapper.close();

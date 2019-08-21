@@ -18,33 +18,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.serotonin.modbus4j.ip.xa;
+package com.serotonin.modbus4j.exception;
 
-import com.serotonin.modbus4j.base.BaseMessageParser;
-import com.serotonin.modbus4j.sero.messaging.IncomingMessage;
-import com.serotonin.modbus4j.sero.util.queue.ByteQueue;
+public class SlaveIdNotEqual extends ModbusTransportException {
+    private static final long serialVersionUID = -1;
 
-/**
- * <p>XaMessageParser class.</p>
- *
- * @author Matthew Lohbihler
- * @version 5.0.0
- */
-public class XaMessageParser extends BaseMessageParser {
     /**
-     * <p>Constructor for XaMessageParser.</p>
-     *
-     * @param master a boolean.
+     * Exception to show that the requested slave id is not what was received
+     * 
+     * @param requestSlaveId - slave id requested
+     * @param responseSlaveId - slave id of response
      */
-    public XaMessageParser(boolean master) {
-        super(master);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected IncomingMessage parseMessageImpl(ByteQueue queue) throws Exception {
-        if (master)
-            return XaMessageResponse.createXaMessageResponse(queue);
-        return XaMessageRequest.createXaMessageRequest(queue);
+    public SlaveIdNotEqual(int requestSlaveId, int responseSlaveId) {
+        super("Response slave id different from requested id", requestSlaveId);
     }
 }

@@ -32,13 +32,36 @@ import com.serotonin.modbus4j.serial.SerialWaitingRoomKeyFactory;
 import com.serotonin.modbus4j.sero.messaging.MessageControl;
 import com.serotonin.modbus4j.sero.messaging.StreamTransport;
 
+/**
+ * <p>AsciiMaster class.</p>
+ *
+ * @author Matthew Lohbihler
+ * @version 5.0.0
+ */
 public class AsciiMaster extends SerialMaster {
     private MessageControl conn;
 
+    /**
+     * <p>Constructor for AsciiMaster.</p>
+     * 
+     * Default to validating the slave id in responses
+     * 
+     * @param wrapper a {@link com.serotonin.modbus4j.serial.SerialPortWrapper} object.
+     */
     public AsciiMaster(SerialPortWrapper wrapper) {
-        super(wrapper);
+        super(wrapper, true);
+    }
+    
+    /**
+     * 
+     * @param wrapper a {@link com.serotonin.modbus4j.serial.SerialPortWrapper} object.
+     * @param validateResponse - confirm that requested slave id is the same in the response
+     */
+    public AsciiMaster(SerialPortWrapper wrapper, boolean validateResponse) {
+        super(wrapper, validateResponse);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void init() throws ModbusInitException {
         super.init();
@@ -56,6 +79,7 @@ public class AsciiMaster extends SerialMaster {
         initialized = true;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void destroy() {
         closeMessageControl(conn);
@@ -63,6 +87,7 @@ public class AsciiMaster extends SerialMaster {
         initialized = false;
     }
 
+    /** {@inheritDoc} */
     @Override
     public ModbusResponse sendImpl(ModbusRequest request) throws ModbusTransportException {
         // Wrap the modbus request in an ascii request.
