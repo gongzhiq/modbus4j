@@ -5,12 +5,12 @@
  *
  * Copyright (C) 2006-2011 Serotonin Software Technologies Inc. http://serotoninsoftware.com
  * @author Matthew Lohbihler
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -56,59 +56,94 @@ import com.serotonin.modbus4j.sero.messaging.WaitingRoomKeyFactory;
  * @version 5.0.0
  */
 public class TcpMaster extends ModbusMaster {
-    private static final int RETRY_PAUSE_START = 50;
-    private static final int RETRY_PAUSE_MAX = 1000;
 
     // Configuration fields.
-	private final Log LOG = LogFactory.getLog(TcpMaster.class);
+    private final Log LOG = LogFactory.getLog(TcpMaster.class);
     private short nextTransactionId = 0;
     private final IpParameters ipParameters;
     private final boolean keepAlive;
     private final boolean autoIncrementTransactionId;
+    private final Integer lingerTime;
 
     // Runtime fields.
     private Socket socket;
     private Transport transport;
     private MessageControl conn;
 
+
     /**
      * <p>Constructor for TcpMaster.</p>
-     * 
+     *
+     * @param params
+     * @param keepAlive
+     * @param autoIncrementTransactionId
+     * @param validateResponse - confirm that requested slave id is the same in the response
+     * @param lingerTime The setting only affects socket close.
+     */
+    public TcpMaster(IpParameters params, boolean keepAlive, boolean autoIncrementTransactionId, boolean validateResponse, Integer lingerTime) {
+        this.ipParameters = params;
+        this.keepAlive = keepAlive;
+        this.autoIncrementTransactionId = autoIncrementTransactionId;
+        this.lingerTime = lingerTime;
+    }
+
+    /**
+     * <p>Constructor for TcpMaster.</p>
+     *
+     * Default to lingerTime disabled
+     *
      * @param params
      * @param keepAlive
      * @param autoIncrementTransactionId
      * @param validateResponse - confirm that requested slave id is the same in the response
      */
     public TcpMaster(IpParameters params, boolean keepAlive, boolean autoIncrementTransactionId, boolean validateResponse) {
-        this.ipParameters = params;
-        this.keepAlive = keepAlive;
-        this.autoIncrementTransactionId = autoIncrementTransactionId;
+        this(params, keepAlive, autoIncrementTransactionId, validateResponse, -1);
+        //this.ipParameters = params;
+        //this.keepAlive = keepAlive;
+        //this.autoIncrementTransactionId = autoIncrementTransactionId;
     }
-    
+
     /**
      * <p>Constructor for TcpMaster.</p>
      * Default to not validating the slave id in responses
-     * 
+     * Default to lingerTime disabled
+     *
      * @param params a {@link com.serotonin.modbus4j.ip.IpParameters} object.
      * @param keepAlive a boolean.
      * @param autoIncrementTransactionId a boolean.
      */
     public TcpMaster(IpParameters params, boolean keepAlive, boolean autoIncrementTransactionId) {
-        this(params, keepAlive, autoIncrementTransactionId, false);
+        this(params, keepAlive, autoIncrementTransactionId, false, -1);
     }
-    
-    
+
     /**
      * <p>Constructor for TcpMaster.</p>
-     * 
+     *
      * Default to auto increment transaction id
      * Default to not validating the slave id in responses
+     * Default to lingerTime disabled
+     *
+     * @param params a {@link com.serotonin.modbus4j.ip.IpParameters} object.
+     * @param keepAlive a boolean.
+     * @param lingerTime an Integer. The setting only affects socket close.
+     */
+    public TcpMaster(IpParameters params, boolean keepAlive,Integer lingerTime) {
+        this(params, keepAlive, true, false, lingerTime);
+    }
+
+    /**
+     * <p>Constructor for TcpMaster.</p>
+     *
+     * Default to auto increment transaction id
+     * Default to not validating the slave id in responses
+     * Default to lingerTime disabled
      *
      * @param params a {@link com.serotonin.modbus4j.ip.IpParameters} object.
      * @param keepAlive a boolean.
      */
     public TcpMaster(IpParameters params, boolean keepAlive) {
-        this(params, keepAlive, true, false);
+        this(params, keepAlive, true, false,-1);
     }
 
     /**
@@ -119,7 +154,7 @@ public class TcpMaster extends ModbusMaster {
     public void setNextTransactionId(short id) {
         this.nextTransactionId = id;
     }
-    
+
     /**
      * <p>Getter for the field <code>nextTransactionId</code>.</p>
      *
@@ -158,9 +193,9 @@ public class TcpMaster extends ModbusMaster {
                 openConnection();
 
             if(conn == null){
-            	LOG.debug("Connection null: " +  ipParameters.getPort());
-        	}
-            
+                LOG.debug("Connection null: " +  ipParameters.getPort());
+            }
+
         }
         catch (Exception e) {
             closeConnection();
@@ -178,56 +213,63 @@ public class TcpMaster extends ModbusMaster {
         }
 
         if(LOG.isDebugEnabled()){
-	    	StringBuilder sb = new StringBuilder();
-	        for (byte b : Arrays.copyOfRange(ipRequest.getMessageData(),0,ipRequest.getMessageData().length)) {
-	            sb.append(String.format("%02X ", b));
-	        }
-			LOG.debug("Encap Request: " + sb.toString());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : Arrays.copyOfRange(ipRequest.getMessageData(),0,ipRequest.getMessageData().length)) {
+                sb.append(String.format("%02X ", b));
+            }
+            LOG.debug("Encap Request: " + sb.toString());
         }
 
-		// Send the request to get the response.
+        // Send the request to get the response.
         IpMessageResponse ipResponse;
-    	LOG.debug("Sending on port: " +  ipParameters.getPort());
+        if(LOG.isDebugEnabled()){
+            LOG.debug("Sending on port: " +  ipParameters.getPort());
+        }
         try {
-        	if(conn == null){
-            	LOG.debug("Connection null: " +  ipParameters.getPort());
-        	}
+            if(conn == null){
+                if(LOG.isDebugEnabled())
+                    LOG.debug("Connection null: " +  ipParameters.getPort());
+            }
             ipResponse = (IpMessageResponse) conn.send(ipRequest);
             if (ipResponse == null)
                 return null;
-            
+
             if(LOG.isDebugEnabled()){
-    	    	StringBuilder sb = new StringBuilder();
-	            for (byte b : Arrays.copyOfRange(ipResponse.getMessageData(),0,ipResponse.getMessageData().length)) {
-	                sb.append(String.format("%02X ", b));
-	            }
-				LOG.debug("Response: " + sb.toString());
+                StringBuilder sb = new StringBuilder();
+                for (byte b : Arrays.copyOfRange(ipResponse.getMessageData(),0,ipResponse.getMessageData().length)) {
+                    sb.append(String.format("%02X ", b));
+                }
+                LOG.debug("Response: " + sb.toString());
             }
             return ipResponse.getModbusResponse();
         }
         catch (Exception e) {
-			LOG.debug("Exception: " + e.getMessage() + " " + e.getLocalizedMessage());
+            if(LOG.isDebugEnabled())
+                LOG.debug("Exception sending message",e);
             if (keepAlive) {
-    			LOG.debug("KeepAlive - reconnect!");
+                if(LOG.isDebugEnabled())
+                    LOG.debug("KeepAlive - reconnect!");
                 // The connection may have been reset, so try to reopen it and attempt the message again.
                 try {
-                	LOG.debug("Modbus4J: Keep-alive connection may have been reset. Attempting to re-open.");
+                    if(LOG.isDebugEnabled())
+                        LOG.debug("Modbus4J: Keep-alive connection may have been reset. Attempting to re-open.");
                     openConnection();
                     ipResponse = (IpMessageResponse) conn.send(ipRequest);
                     if (ipResponse == null)
                         return null;
                     if(LOG.isDebugEnabled()){
-            	    	StringBuilder sb = new StringBuilder();
-	                    for (byte b : Arrays.copyOfRange(ipResponse.getMessageData(),0,ipResponse.getMessageData().length)) {
-	                        sb.append(String.format("%02X ", b));
-	                    }
-	        			LOG.debug("Response: " + sb.toString());
+                        StringBuilder sb = new StringBuilder();
+                        for (byte b : Arrays.copyOfRange(ipResponse.getMessageData(),0,ipResponse.getMessageData().length)) {
+                            sb.append(String.format("%02X ", b));
+                        }
+                        LOG.debug("Response: " + sb.toString());
                     }
                     return ipResponse.getModbusResponse();
                 }
                 catch (Exception e2) {
                     closeConnection();
-        			LOG.debug("Exception: " + e2.getMessage() + " " + e2.getLocalizedMessage());
+                    if(LOG.isDebugEnabled())
+                        LOG.debug("Exception re-sending message",e);
                     throw new ModbusTransportException(e2, request.getSlaveId());
                 }
             }
@@ -249,40 +291,19 @@ public class TcpMaster extends ModbusMaster {
         // Make sure any existing connection is closed.
         closeConnection();
 
-        // Try 'retries' times to get the socket open.
-        int retries = getRetries();
-        int retryPause = RETRY_PAUSE_START;
-        while (true) {
-            try {
-                socket = new Socket();
-                socket.setSoTimeout(getTimeout());
-                socket.connect(new InetSocketAddress(ipParameters.getHost(), ipParameters.getPort()), getTimeout());
-                if (getePoll() != null)
-                    transport = new EpollStreamTransport(socket.getInputStream(), socket.getOutputStream(), getePoll());
-                else
-                    transport = new StreamTransport(socket.getInputStream(), socket.getOutputStream());
-                break;
-            }
-            catch (IOException e) {
-                closeConnection();
+        Integer soLinger = getLingerTime();
 
-                if (retries <= 0)
-                    throw e;
-                // System.out.println("Modbus4J: Open connection failed, trying again.");
-                retries--;
-
-                // Pause for a bit.
-                try {
-                    Thread.sleep(retryPause);
-                }
-                catch (InterruptedException e1) {
-                    // ignore
-                }
-                retryPause *= 2;
-                if (retryPause > RETRY_PAUSE_MAX)
-                    retryPause = RETRY_PAUSE_MAX;
-            }
-        }
+        socket = new Socket();
+        socket.setSoTimeout(getTimeout());
+        if(soLinger == null || soLinger < 0)//any null or negative will disable SO_Linger
+            socket.setSoLinger(false, 0);
+        else
+            socket.setSoLinger(true, soLinger);
+        socket.connect(new InetSocketAddress(ipParameters.getHost(), ipParameters.getPort()), getTimeout());
+        if (getePoll() != null)
+            transport = new EpollStreamTransport(socket.getInputStream(), socket.getOutputStream(), getePoll());
+        else
+            transport = new StreamTransport(socket.getInputStream(), socket.getOutputStream());
 
         BaseMessageParser ipMessageParser;
         WaitingRoomKeyFactory waitingRoomKeyFactory;
@@ -314,4 +335,14 @@ public class TcpMaster extends ModbusMaster {
         conn = null;
         socket = null;
     }
+
+    /**
+     * <p>Getter for the field <code>lingerTime</code>.</p>
+     *
+     * @return an Integer.
+     */
+    public Integer getLingerTime() {
+        return lingerTime;
+    }
+
 }
