@@ -10,7 +10,7 @@ modbus4j
 	}
 	
 	dependencies {
-	        implementation 'com.github.licheedev:modbus4j:3.1.1-1e02fd7'
+	        implementation 'com.github.licheedev:modbus4j:3.1.1-alpha1'
 	}
 
 ```
