@@ -72,7 +72,9 @@ public class StreamTransport implements Transport, Runnable {
      * <p>removeConsumer.</p>
      */
     public void removeConsumer() {
-        listener.stop();
+        if (listener != null) {
+            listener.stop();
+        }
         listener = null;
     }
 
