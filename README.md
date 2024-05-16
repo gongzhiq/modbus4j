@@ -1,6 +1,8 @@
 modbus4j
 ========
 
+[![](https://jitpack.io/v/licheedev/modbus4j.svg)](https://jitpack.io/#licheedev/modbus4j)
+
 ```
 	allprojects {
 		repositories {
