@@ -45,7 +45,7 @@ public class CustomWriteRegistersRequest extends ModbusRequest {
      * @param sdata an array of {@link short} objects.
      * @throws com.serotonin.modbus4j.exception.ModbusTransportException if any.
      */
-    public CustomWriteRegistersRequest(int slaveId, int startOffset, short[] sdata) throws ModbusTransportException {
+    public CustomWriteRegistersRequest(int slaveId, int startOffset, int[] sdata) throws ModbusTransportException {
         super(slaveId);
         this.startOffset = startOffset;
         data = convertToBytes(sdata);
