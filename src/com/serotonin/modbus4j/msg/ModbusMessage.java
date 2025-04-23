@@ -110,6 +110,18 @@ abstract public class ModbusMessage {
         return data;
     }
 
+    protected byte[] convertIntsToBytes(int[] idata) {
+        int byteCount = idata.length * 4;
+        byte[] data = new byte[byteCount];
+        for (int i = 0; i < idata.length; i++) {
+            data[i * 4] = (byte) (0xff & (idata[i] >> 24));
+            data[i * 4 + 1] = (byte) (0xff & (idata[i] >> 16));
+            data[i * 4 + 2] = (byte) (0xff & (idata[i] >> 8));
+            data[i * 4 + 3] = (byte) (0xff & idata[i]);
+        }
+        return data;
+    }
+
     /**
      * <p>convertToBooleans.</p>
      *
