@@ -110,7 +110,7 @@ abstract public class ModbusMessage {
         return data;
     }
 
-    protected byte[] convertIntsToBytes(int[] idata) {
+    protected byte[] convertIntsToBytes(int[] sdata) {
        int byteCount = sdata.length * 2;
         byte[] data = new byte[byteCount];
         for (int i = 0; i < sdata.length; i++) {
