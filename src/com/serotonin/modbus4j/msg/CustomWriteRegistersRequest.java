@@ -48,7 +48,7 @@ public class CustomWriteRegistersRequest extends ModbusRequest {
     public CustomWriteRegistersRequest(int slaveId, int startOffset, int[] sdata) throws ModbusTransportException {
         super(slaveId);
         this.startOffset = startOffset;
-        data = convertToBytes(sdata);
+        data = convertIntsToBytes(sdata);
     }
 
     /** {@inheritDoc} */
